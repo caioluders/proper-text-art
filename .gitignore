@@ -1,7 +1,8 @@
 .venv/
 output/
 tests/outputs/
-tramoia-outputs/
+tramoia-outputs/*.txt
+tramoia-outputs/*.html
 notebooks/
 .python-version
 *__pycache__*
