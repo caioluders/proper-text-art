@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from proper_pixel_art import mesh
+from proper_text_art import mesh
 
 
 def test_mesh():

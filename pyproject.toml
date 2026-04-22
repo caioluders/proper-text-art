@@ -1,24 +1,24 @@
 [project]
-name = "proper-pixel-art"
-version = "1.4.1"
-description = "Converts pixel-art-style images such as those from generative models or low-quality sprite web uploads to true resolution usable assets."
+name = "proper-text-art"
+version = "0.1.0"
+description = "Converts pixel-art-style images into text-mode art (ANSI-colored Unicode or structural ASCII)."
 authors = [{name = "Kenneth Allen"}]
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 keywords = [
-    "pixel-art",
+    "text-art",
+    "ascii-art",
+    "ansi-art",
     "image-processing",
-    "sprites",
-    "game-dev",
-    "generative-ai",
+    "terminal",
     "generative-art",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Multimedia :: Graphics :: Graphics Conversion",
-    "Topic :: Games/Entertainment",
+    "Topic :: Terminals",
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
@@ -28,9 +28,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/KennethJAllen/proper-pixel-art"
-Repository = "https://github.com/KennethJAllen/proper-pixel-art"
-Issues = "https://github.com/KennethJAllen/proper-pixel-art/issues"
+Homepage = "https://github.com/caioluders/proper-text-art"
+Repository = "https://github.com/caioluders/proper-text-art"
+Issues = "https://github.com/caioluders/proper-text-art/issues"
 
 [project.optional-dependencies]
 web = ["gradio>=5.0.0"]
@@ -40,9 +40,8 @@ scripts = [
 ]
 
 [project.scripts]
-ppa = "proper_pixel_art.cli:main"
-ppa-web = "proper_pixel_art.web:main"
-ppa-gen = "scripts.ppa_gen:main"
+pta = "proper_text_art.cli:main"
+pta-web = "proper_text_art.web:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -56,7 +55,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["proper_pixel_art"]
+packages = ["proper_text_art"]
 exclude = ["assets"]
 
 [tool.hatch.build.targets.sdist]

@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from proper_pixel_art import colors, mesh, utils
-from proper_pixel_art.utils import Mesh
+from proper_text_art import colors, mesh, utils
+from proper_text_art.utils import Mesh
 
 
 def downsample(

@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from proper_pixel_art import colors, utils
-from proper_pixel_art.utils import Lines, Mesh
+from proper_text_art import colors, utils
+from proper_text_art.utils import Lines, Mesh
 
 
 def close_edges(edges: np.ndarray, kernel_size: int = 10) -> np.ndarray:

@@ -1,6 +1,6 @@
 """Hugging Face Spaces entry point."""
 
-from proper_pixel_art.web import create_demo
+from proper_text_art.web import create_demo
 
 demo = create_demo()
 

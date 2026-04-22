@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from proper_pixel_art import colors
+from proper_text_art import colors
 
 
 def _make_rgba(rgb_cell: np.ndarray, alpha: int = 255) -> np.ndarray:

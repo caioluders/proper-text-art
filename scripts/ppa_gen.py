@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from PIL import Image
 
-from proper_pixel_art.cli import add_pixelation_args
-from proper_pixel_art.pixelate import pixelate
+from proper_text_art.cli import add_pixelation_args
+from proper_text_art.pixelate import pixelate
 
 
 def load_api_key() -> str:

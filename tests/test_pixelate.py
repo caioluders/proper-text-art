@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from proper_pixel_art import pixelate
+from proper_text_art import pixelate
 
 
 def test_pixelate_pngs(pixelate_png_test_params: dict[str, dict]) -> None:
