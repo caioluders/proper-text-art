@@ -16,8 +16,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pta",
         description=(
-            "Render an image as text-mode art (ANSI-colored blocks, half-blocks, "
-            "structural ASCII, or Unicode shade blocks)."
+            "Render an image as text-mode art (ANSI-colored blocks, double-width "
+            "blocks, half-blocks, structural ASCII, or Unicode shade blocks)."
         ),
     )
     parser.add_argument(

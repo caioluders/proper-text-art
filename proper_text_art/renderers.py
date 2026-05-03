@@ -1,7 +1,9 @@
 r"""Render a cell-grid (RGBA + optional structure map) as ANSI or HTML text art.
 
-Four modes:
+Five modes:
 - ``blocks`` — one ``█`` per cell, truecolor foreground.
+- ``double`` — two ``██`` per cell, truecolor foreground. Doubles horizontal
+  width so each pixel reads roughly square in a typical ~2:1 monospace cell.
 - ``half``   — ``▀``/``▄``/``█`` with fg = top cell, bg = bottom cell; pairs rows
   to roughly double vertical resolution (character cells are ~2:1 tall).
 - ``ascii``  — structural ASCII: ``| / - \`` for strong edges (oriented from the
@@ -19,7 +21,7 @@ import math
 
 import numpy as np
 
-MODES = ("blocks", "half", "ascii", "shade")
+MODES = ("blocks", "double", "half", "ascii", "shade")
 
 DEFAULT_RAMP = " .:-=+*#%@"
 SHADE_RAMP = " ░▒▓█"  # " ░▒▓█"
@@ -79,6 +81,8 @@ def _pick_char(
     rgb = (int(cell[0]), int(cell[1]), int(cell[2]))
     if mode == "blocks":
         return FULL_BLOCK
+    if mode == "double":
+        return FULL_BLOCK * 2
     if mode == "shade":
         return _ramp_char(_luminance(rgb), SHADE_RAMP)
     if mode == "ascii":
@@ -94,11 +98,17 @@ def _pick_char(
     raise ValueError(f"unsupported mode: {mode!r}")
 
 
+def _cell_pad(mode: str) -> str:
+    """Padding emitted for transparent cells (matches the cell's char width)."""
+    return "  " if mode == "double" else " "
+
+
 # ---------------------------------------------------------------------------
 # ANSI emitter
 # ---------------------------------------------------------------------------
 
 ANSI_RESET = "\x1b[0m"
+ANSI_BG_DEFAULT = "\x1b[49m"
 
 
 def _ansi_fg(rgb: tuple[int, int, int]) -> str:
@@ -117,19 +127,30 @@ def _render_ansi_half(grid: np.ndarray) -> str:
         bot = grid[j + 1] if j + 1 < h else np.zeros_like(top)
         bot_exists = j + 1 < h
         parts: list[str] = []
+        # Tracks whether the previous cell left an ANSI bg color set; if so, a
+        # following transparent (or top-transparent) cell must clear it,
+        # otherwise the prior cell's bg leaks rightward into the empty area.
+        bg_set = False
         for i in range(w):
             t_trans = _is_transparent(top[i])
             b_trans = not bot_exists or _is_transparent(bot[i])
             t_rgb = (int(top[i, 0]), int(top[i, 1]), int(top[i, 2]))
             b_rgb = (int(bot[i, 0]), int(bot[i, 1]), int(bot[i, 2]))
             if t_trans and b_trans:
-                parts.append(" ")
+                prefix = ANSI_BG_DEFAULT if bg_set else ""
+                parts.append(f"{prefix} ")
+                bg_set = False
             elif t_trans:
-                parts.append(f"{_ansi_fg(b_rgb)}{LOWER_HALF}")
+                prefix = ANSI_BG_DEFAULT if bg_set else ""
+                parts.append(f"{prefix}{_ansi_fg(b_rgb)}{LOWER_HALF}")
+                bg_set = False
             elif b_trans:
-                parts.append(f"{_ansi_fg(t_rgb)}{FULL_BLOCK}")
+                prefix = ANSI_BG_DEFAULT if bg_set else ""
+                parts.append(f"{prefix}{_ansi_fg(t_rgb)}{FULL_BLOCK}")
+                bg_set = False
             else:
                 parts.append(f"{_ansi_fg(t_rgb)}{_ansi_bg(b_rgb)}{UPPER_HALF}")
+                bg_set = True
         lines.append("".join(parts) + ANSI_RESET)
     return "\n".join(lines)
 
@@ -148,6 +169,7 @@ def render_ansi(
         return _render_ansi_half(grid)
 
     ramp = ramp or DEFAULT_RAMP
+    pad = _cell_pad(mode)
     h, w, _ = grid.shape
     lines: list[str] = []
     for j in range(h):
@@ -155,7 +177,7 @@ def render_ansi(
         for i in range(w):
             cell = grid[j, i]
             if _is_transparent(cell):
-                parts.append(" ")
+                parts.append(pad)
                 continue
             rgb = (int(cell[0]), int(cell[1]), int(cell[2]))
             sc = structure[j, i] if structure is not None else None
@@ -247,6 +269,7 @@ def render_html(
         body = _render_html_half_body(grid)
     else:
         ramp = ramp or DEFAULT_RAMP
+        pad = _cell_pad(mode)
         h, w, _ = grid.shape
         lines: list[str] = []
         for j in range(h):
@@ -254,7 +277,7 @@ def render_html(
             for i in range(w):
                 cell = grid[j, i]
                 if _is_transparent(cell):
-                    parts.append(" ")
+                    parts.append(pad)
                     continue
                 rgb = (int(cell[0]), int(cell[1]), int(cell[2]))
                 sc = structure[j, i] if structure is not None else None

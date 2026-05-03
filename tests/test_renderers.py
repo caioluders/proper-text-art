@@ -3,6 +3,7 @@
 import numpy as np
 
 from proper_text_art.renderers import (
+    ANSI_BG_DEFAULT,
     ANSI_RESET,
     DEFAULT_RAMP,
     FULL_BLOCK,
@@ -66,6 +67,60 @@ def test_render_ansi_half_doubles_row_packing():
     grid2[1, 0] = (10, 20, 30, 255)
     out2 = render_ansi(grid2, mode="half")
     assert f"\x1b[38;2;10;20;30m{LOWER_HALF}" in out2
+
+
+def test_render_ansi_half_resets_bg_before_transparent_cell():
+    """An opaque half-block followed by a transparent cell must clear the bg.
+
+    Otherwise the prior cell's ANSI bg color persists across the trailing
+    space and looks like the opaque pixel was duplicated rightward.
+    """
+    grid = np.zeros((2, 2, 4), dtype=np.uint8)
+    grid[0, 0] = (10, 20, 30, 255)
+    grid[1, 0] = (40, 50, 60, 255)
+    # Column 1 is fully transparent.
+    out = render_ansi(grid, mode="half")
+    line = out.split("\n")[0]
+    # Sanity: the opaque cell sets fg+bg+▀.
+    assert f"\x1b[38;2;10;20;30m\x1b[48;2;40;50;60m{UPPER_HALF}" in line
+    # The transparent cell that follows must explicitly reset the bg before
+    # emitting its space — otherwise the (40,50,60) bg leaks rightward.
+    assert f"{UPPER_HALF}{ANSI_BG_DEFAULT} " in line
+
+
+def test_render_ansi_half_resets_bg_before_top_transparent_cell():
+    """Top-transparent + bottom-opaque must also clear leaked bg."""
+    grid = np.zeros((2, 2, 4), dtype=np.uint8)
+    grid[0, 0] = (10, 20, 30, 255)
+    grid[1, 0] = (40, 50, 60, 255)
+    # Column 1: top transparent, bottom opaque blue.
+    grid[1, 1] = (0, 0, 200, 255)
+    out = render_ansi(grid, mode="half")
+    line = out.split("\n")[0]
+    # The lower-half block must be preceded by a bg reset.
+    assert f"{ANSI_BG_DEFAULT}\x1b[38;2;0;0;200m{LOWER_HALF}" in line
+
+
+def test_render_ansi_double_emits_two_full_blocks_per_cell():
+    """``double`` mode renders ``██`` per cell so pixels look square in a terminal."""
+    grid = np.zeros((1, 2, 4), dtype=np.uint8)
+    grid[0, 0] = (255, 0, 0, 255)
+    grid[0, 1] = (0, 0, 0, 0)  # transparent
+    out = render_ansi(grid, mode="double")
+    # Opaque red cell → fg sequence followed by two full blocks (no extra fg in between).
+    assert f"\x1b[38;2;255;0;0m{FULL_BLOCK}{FULL_BLOCK}" in out
+    # Transparent cell pads with two spaces (matches the cell's char width).
+    assert f"{FULL_BLOCK}{FULL_BLOCK}  " in out
+    assert out.endswith(ANSI_RESET)
+
+
+def test_render_html_double_emits_two_full_blocks_per_cell():
+    grid = np.zeros((1, 1, 4), dtype=np.uint8)
+    grid[0, 0] = (10, 20, 30, 255)
+    out = render_html(grid, mode="double", full_document=False)
+    assert (
+        f'<span style="color:rgb(10,20,30)">{FULL_BLOCK}{FULL_BLOCK}</span>' in out
+    )
 
 
 def test_render_ansi_shade_uses_ramp():
